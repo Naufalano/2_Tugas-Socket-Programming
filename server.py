@@ -5,6 +5,7 @@ import threading
 server_ip = "127.0.0.1"
 server_port = 12345
 buffer_size = 1024
+password = "secretpassword"  # Password chat room
 
 # Membuat socket UDP
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -12,29 +13,43 @@ server_socket.bind((server_ip, server_port))
 
 print(f"Server aktif di {server_ip}:{server_port}")
 
-clients = set()
+clients = {}
+usernames = set()
 
-# Fungsi untuk menangani client dan broadcast pesan
+# Fungsi untuk menangani pesan dari client
 def handle_client():
     while True:
         try:
             data, addr = server_socket.recvfrom(buffer_size)
-            
-            # Tambahkan client baru ke set clients
-            if addr not in clients:
-                clients.add(addr)
-                print(f"Client baru terhubung: {addr}")
+            message = data.decode().split(":", 1)
 
-            # Menampilkan pesan yang diterima di server
-            print(f"Pesan dari {addr}: {data.decode()}")
+            if message[0] == "JOIN":
+                username, client_password = message[1].split(",")
 
-            # Broadcast pesan ke semua client selain pengirim
-            for client in clients:
-                if client != addr:  # Jangan kirim kembali ke pengirim
-                    server_socket.sendto(data, client)
-                    print(f"Pesan diteruskan ke {client}")
+                # Verifikasi password
+                if client_password.strip() == password:
+                    if username not in usernames:
+                        usernames.add(username)
+                        clients[addr] = username
+                        print(f"{username} telah bergabung dari {addr}")
+                        server_socket.sendto(f"Selamat datang, {username}!".encode(), addr)
+                    else:
+                        server_socket.sendto(f"Username {username} sudah digunakan!".encode(), addr)
                 else:
-                    print(f"Pesan tidak dikirim kembali ke pengirim: {client}")
+                    server_socket.sendto("Password salah!".encode(), addr)
+
+            elif message[0] == "MSG":
+                username = clients.get(addr, None)
+                if username:
+                    broadcast_message = f"{username}: {message[1]}"
+                    print(f"Menerima pesan dari {username}: {message[1]}")
+
+                    # Broadcast pesan ke semua client kecuali pengirim
+                    for client_addr in clients:
+                        if client_addr != addr:
+                            server_socket.sendto(broadcast_message.encode(), client_addr)
+                            print(f"Pesan diteruskan ke {client_addr}")
+
         except Exception as e:
             print(f"Error: {e}")
             continue
