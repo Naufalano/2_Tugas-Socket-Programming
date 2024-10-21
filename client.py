@@ -41,7 +41,7 @@ def receive_messages():
             if response == "Password salah!" or response == "Username sudah digunakan!":
                 print(response)
             else:
-                print(f"\n{data.decode()}")
+                print(f"\n{response}")
         except Exception as e:
             print(f"Error saat menerima pesan: {e}")
             break
