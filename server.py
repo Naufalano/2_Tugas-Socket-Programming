@@ -14,12 +14,12 @@ server_socket.bind((server_ip, server_port))
 print(f"Server aktif di {server_ip}:{server_port}")
 
 clients = {}  # Menyimpan alamat client dan username yang terhubung
+usernames = set()
 
 # Fungsi untuk menangani pesan dari client dan broadcast ke client lain
 def handle_client():
     while True:
         try:
-            # Terima pesan dari client
             data, addr = server_socket.recvfrom(buffer_size)
             message = data.decode()
 
@@ -28,10 +28,11 @@ def handle_client():
                 print(f"Pesan PING diterima dari {addr}, mengirim PONG...")
                 server_socket.sendto("PONG".encode(), addr)
                 continue
-
+            
+            message = message.split(":", 1)
             # Proses JOIN: memisahkan username dan password
-            if message.startswith("JOIN"):
-                _, username, client_password = message.split(":")
+            if message[0] == "JOIN":
+                username, client_password = message[1].split(":")
 
                 # Verifikasi password
                 if client_password.strip() != password:
@@ -39,7 +40,7 @@ def handle_client():
                     continue  # Kembali meminta client memasukkan password
 
                 # Verifikasi username unik
-                if username in clients.values():
+                if username in usernames:
                     server_socket.sendto("Username sudah digunakan!".encode(), addr)
                     continue  # Kembali meminta client memasukkan username
 
@@ -49,17 +50,18 @@ def handle_client():
                 server_socket.sendto(f"Selamat datang, {username}!".encode(), addr)
 
             # Proses MSG: kirim pesan ke semua client lain
-            elif message.startswith("MSG"):
+            elif message[0] == "MSG":
                 username = clients.get(addr, None)
                 if username:
                     # Broadcast pesan ke semua client selain pengirim
-                    broadcast_message = f"{username}: {message.split(':', 1)[1]}"
-                    print(f"Menerima pesan dari {username}: {message.split(':', 1)[1]}")
+                    broadcast_message = f"{username}: {message[1]}"
+                    print(f"Menerima pesan dari {username}: {message[1]}")
 
                     # Kirim ke semua client yang terhubung
-                    for client in clients:
-                        if client != addr:
-                            server_socket.sendto(broadcast_message.encode(), client)
+                    for client_addr in clients:
+                        if client_addr != addr:  # Jangan kirim ke pengirim
+                            server_socket.sendto(broadcast_message.encode(), client_addr)
+                            print(f"Pesan dikirim ke {client_addr}")
 
         except Exception as e:
             print(f"Error: {e}")

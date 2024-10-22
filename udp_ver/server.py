@@ -3,7 +3,7 @@ import threading
 
 # Konfigurasi server
 server_ip = "127.0.0.1"
-server_port = 12345
+server_port = 23456
 buffer_size = 1024
 password = "secretpassword"  # Password chat room
 

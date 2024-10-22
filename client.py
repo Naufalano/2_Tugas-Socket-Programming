@@ -6,7 +6,7 @@ buffer_size = 1024
 
 # Membuat socket UDP
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-client_socket.settimeout(3)  # Mengatur timeout agar client tidak menunggu terlalu lama jika server tidak merespons
+client_socket.settimeout(None)  # Mengatur timeout agar client tidak menunggu terlalu lama jika server tidak merespons
 
 def get_server_info():
     while True:
@@ -29,26 +29,6 @@ def get_server_info():
 # Mendapatkan IP dan port server dengan validasi
 server_ip, server_port = get_server_info()
 
-# Fungsi untuk menerima pesan dari server
-def receive_messages():
-    while True:
-        try:
-            # Terima pesan dari server
-            data, addr = client_socket.recvfrom(buffer_size)
-            response = data.decode()
-
-            # Jika ada pesan kesalahan, cetak pesan
-            if response == "Password salah!" or response == "Username sudah digunakan!":
-                print(response)
-            else:
-                print(f"\n{response}")
-        except Exception as e:
-            print(f"Error saat menerima pesan: {e}")
-            break
-
-# Membuat thread untuk menerima pesan secara asinkron
-threading.Thread(target=receive_messages, daemon=True).start()
-
 # Proses untuk mendapatkan username dan password yang benar
 while True:
     username = input("Masukkan username: ")
@@ -60,11 +40,29 @@ while True:
     # Tunggu respons apakah username dan password valid
     try:
         response, addr = client_socket.recvfrom(buffer_size)
-        if response.decode() == "Selamat datang, " + username + "!":
+        if response.decode() == "Password salah!" or response.decode() == "Username sudah digunakan!":
+            print(response)
+        elif response.decode() == "Selamat datang, " + username + "!":
             print("Berhasil terhubung ke server!")
             break  # Berhenti meminta input jika berhasil
     except socket.timeout:
         print("Tidak menerima respons dari server, coba lagi.")
+
+# Fungsi untuk menerima pesan dari server
+def receive_messages():
+    while True:
+        try:
+            # Terima pesan dari server
+            data, addr = client_socket.recvfrom(buffer_size)
+            response = data.decode()
+            
+            print(f"\n{response}")
+        except Exception as e:
+            print(f"Error saat menerima pesan: {e}")
+            break
+
+# Membuat thread untuk menerima pesan secara asinkron
+threading.Thread(target=receive_messages, daemon=True).start()
 
 # Mengirimkan pesan ke server setelah berhasil bergabung
 while True:
