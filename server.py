@@ -55,7 +55,7 @@ def handle_client():
                     continue  # Kembali meminta client memasukkan password
 
                 # Verifikasi username unik
-                if username in usernames:
+                if username in clients.values():
                     server_socket.sendto("Username sudah digunakan!".encode(), addr)
                     continue  # Kembali meminta client memasukkan username
 
