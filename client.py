@@ -41,7 +41,7 @@ while True:
     try:
         response, addr = client_socket.recvfrom(buffer_size)
         if response.decode() == "Password salah!" or response.decode() == "Username sudah digunakan!":
-            print(response)
+            print(response.decode())
         elif response.decode() == "Selamat datang, " + username + "!":
             print("Berhasil terhubung ke server!")
             break  # Berhenti meminta input jika berhasil
@@ -87,6 +87,7 @@ threading.Thread(target=receive_messages, daemon=True).start()
 while True:
     message = input(f"{username}: ")
     if message.lower() == "exit":
+        client_socket.sendto(f"EXIT:{username}".encode() , (server_ip, server_port))
         break
     message = cipher(message, shift)
     # Mengirim pesan ke server dengan format "MSG:pesan"
