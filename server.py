@@ -16,6 +16,21 @@ print(f"Server aktif di {server_ip}:{server_port}")
 clients = {}  # Menyimpan alamat client dan username yang terhubung
 usernames = set()
 
+# Fungsi untuk caesar cipher
+shift = 10
+def cipher(text, shift):
+    encrypted_text = ""
+    for char in text:
+        if char.isalpha(): #Jika alfabet, geser
+            shift_amount = shift % 26
+            if char.islower():
+                encrypted_text += chr((ord(char) - ord('a') + shift_amount) % 26 + ord('a'))
+            elif char.isupper():
+                encrypted_text += chr((ord(char) - ord('A') + shift_amount) % 26 + ord('A'))
+        else:
+            encrypted_text += char
+    return encrypted_text
+
 # Fungsi untuk menangani pesan dari client dan broadcast ke client lain
 def handle_client():
     while True:
@@ -54,7 +69,8 @@ def handle_client():
                 username = clients.get(addr, None)
                 if username:
                     # Broadcast pesan ke semua client selain pengirim
-                    broadcast_message = f"{username}: {message[1]}"
+                    
+                    broadcast_message = f"{cipher(username, shift)}: {message[1]}"
                     print(f"Menerima pesan dari {username}: {message[1]}")
 
                     # Kirim ke semua client yang terhubung

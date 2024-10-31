@@ -48,6 +48,24 @@ while True:
     except socket.timeout:
         print("Tidak menerima respons dari server, coba lagi.")
 
+
+# Deklarasi fungsi caesar_cipher terlebih dahulu
+shift = 10 
+# Shift yang akan dilakukan sebanyak 10
+def cipher(text, shift):
+    encrypted_text = ""
+    for char in text:
+        if char.isalpha(): #Jika alfabet, geser
+            shift_amount = shift % 26
+            if char.islower():
+                encrypted_text += chr((ord(char) - ord('a') + shift_amount) % 26 + ord('a'))
+            elif char.isupper():
+                encrypted_text += chr((ord(char) - ord('A') + shift_amount) % 26 + ord('A'))
+        else:
+            encrypted_text += char
+    return encrypted_text
+
+ 
 # Fungsi untuk menerima pesan dari server
 def receive_messages():
     while True:
@@ -55,6 +73,7 @@ def receive_messages():
             # Terima pesan dari server
             data, addr = client_socket.recvfrom(buffer_size)
             response = data.decode()
+            response = cipher(response, -shift)
             
             print(f"\n{response}")
         except Exception as e:
@@ -69,8 +88,8 @@ while True:
     message = input(f"{username}: ")
     if message.lower() == "exit":
         break
-
+    message = cipher(message, shift)
     # Mengirim pesan ke server dengan format "MSG:pesan"
-    client_socket.sendto(f"MSG:{message}".encode(), (server_ip, server_port))
+    client_socket.sendto(f"MSG:{message}".encode() , (server_ip, server_port))
 
 client_socket.close()
