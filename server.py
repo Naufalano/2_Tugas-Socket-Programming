@@ -63,6 +63,9 @@ def handle_client():
                 clients[addr] = username
                 print(f"{username} telah bergabung dari {addr}")
                 server_socket.sendto(f"Selamat datang, {username}!".encode(), addr)
+                for client_addr in clients:
+                    if client_addr != addr:
+                        server_socket.sendto(f"{cipher(f"{username} telah bergabung ke chatroom.", shift)}".encode(), client_addr)
 
             # Proses MSG: kirim pesan ke semua client lain
             elif message[0] == "MSG":
@@ -78,6 +81,18 @@ def handle_client():
                         if client_addr != addr:  # Jangan kirim ke pengirim
                             server_socket.sendto(broadcast_message.encode(), client_addr)
                             print(f"Pesan dikirim ke {client_addr}")
+
+            # Mengeluarkan peserta yang keluar dari chatroom                
+            elif message[0] == "EXIT":
+                # Remove the client from the list
+                username = clients.pop(addr, None)
+                if username:
+                    usernames.discard(username)  # Remove the username from the set
+                    print(f"{username} telah keluar dari chatroom.")
+                    # Notify remaining clients about the user leaving
+                    broadcast_message = f"{username} telah keluar dari chatroom."
+                    for client_addr in clients:
+                        server_socket.sendto(f"{cipher(broadcast_message, shift)}".encode(), client_addr)
 
         except Exception as e:
             print(f"Error: {e}")
