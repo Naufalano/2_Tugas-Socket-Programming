@@ -44,6 +44,7 @@ while True:
             print(response.decode())
         elif response.decode() == "Selamat datang, " + username + "!":
             print("Berhasil terhubung ke server!")
+            print(response.decode())
             break  # Berhenti meminta input jika berhasil
     except socket.timeout:
         print("Tidak menerima respons dari server, coba lagi.")
